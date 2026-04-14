@@ -1,11 +1,32 @@
-      - name: Create Manifest
-        run: |
+name: Build
+on: [push]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - run: |
+          npm install @capacitor/cli @capacitor/android
+          mkdir -p www
+          echo '<!DOCTYPE html><html><head><style>body { background: rgba(0,0,0,0.5); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; } .menu { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #00ff00; }</style></head><body><div class="menu"><h3>Menu Overlay</h3><p>Se você vê isso, funcionou!</p></div></body></html>' > www/index.html
+          rm -rf android
+          npx cap add android
+          
+          # Fix Android Config
+          echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'; exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7' }" >> android/app/build.gradle
+
+          # Create Custom Manifest (Sobreposição)
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-              <application android:allowBackup="true" android:label="Menu Invisivel" android:hardwareAccelerated="true">
+              <application android:allowBackup="true" android:label="Menu Invisivel">
                   <activity android:name="com.getcapacitor.community.example.MainActivity" 
                             android:exported="true" 
                             android:theme="@android:style/Theme.Translucent.NoTitleBar">
@@ -18,3 +39,8 @@
           </manifest>
           EOF
           
+          cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: android/app/build/outputs/apk/debug/app-debug.apk
