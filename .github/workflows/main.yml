@@ -5,23 +5,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      
+      - name: set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
+
       - name: Install and Setup
         run: |
           npm install @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
           touch www/index.html
-          # Remove a pasta android atual para criar uma completa
           rm -rf android
           npx cap add android
-          # Coloca o SEU arquivo de transparência no lugar certo do novo projeto
-          mkdir -p android/app/src/main/
-          # Se você tiver o arquivo AndroidManifest.xml na raiz ou em outro lugar, vamos garantir que ele exista
-          # Caso contrário, o comando abaixo cria um básico com transparência agora mesmo
-          echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.meu.overlay"><uses-permission android:name="android.permission.INTERNET" /><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /><application android:allowBackup="true" android:label="Menu Invisivel"><activity android:name="com.meu.overlay.MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity></application></manifest>' > android/app/src/main/AndroidManifest.xml
+          
+      - name: Create Custom Manifest
+        run: |
+          cat <<EOF > android/app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.meu.overlay">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+              <application android:allowBackup="true" android:label="Menu Invisivel">
+                  <activity android:name="com.meu.overlay.MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
 
       - name: Build APK
         run: |
