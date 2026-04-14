@@ -14,7 +14,8 @@ jobs:
           npm install @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
           touch www/index.html
-          npx cap add android
+          # O comando abaixo apenas atualiza se a pasta já existir
+          npx cap sync android
       - name: Build
         run: |
           cd android
@@ -25,4 +26,3 @@ jobs:
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
