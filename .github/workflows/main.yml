@@ -12,20 +12,24 @@ jobs:
       - run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
-          echo '<!DOCTYPE html><html><head><style>body { background: rgba(0,0,0,0.5); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; } .menu { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #00ff00; }</style></head><body><div class="menu"><h3>Menu Overlay</h3><p>Se você vê isso, funcionou!</p></div></body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><style>body { background: rgba(0,0,0,0.5); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; } .menu { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #00ff00; }</style></head><body><div class="menu"><h3>Menu Overlay Ativo</h3><p>Se você vê isso, o Android aceitou!</p></div></body></html>' > www/index.html
           rm -rf android
           npx cap add android
           
-          # Fix Android Config
+          # 1. Configura o Namespace
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
+          
+          # 2. Remove conflitos de biblioteca
           echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'; exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7' }" >> android/app/build.gradle
 
-          # Create Custom Manifest (Sobreposição)
+          # 3. FORÇA O MANIFESTO (O segredo para ativar a chave cinza)
+          rm -f android/app/src/main/AndroidManifest.xml
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+              <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION" />
               <application android:allowBackup="true" android:label="Menu Invisivel">
                   <activity android:name="com.getcapacitor.community.example.MainActivity" 
                             android:exported="true" 
@@ -44,3 +48,4 @@ jobs:
         with:
           name: app
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          
