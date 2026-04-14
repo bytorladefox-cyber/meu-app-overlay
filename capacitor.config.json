@@ -1,0 +1,10 @@
+{
+  "appId": "com.meu.overlay",
+  "appName": "Menu Invisivel",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://quick-splash-stage.lovable.app/",
+    "cleartext": true
+  }
+}
