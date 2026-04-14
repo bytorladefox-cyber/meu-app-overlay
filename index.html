@@ -1,12 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Menu Overlay</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: transparent !important; overflow: hidden; }
-        iframe { border: none; width: 100vw; height: 100vh; background: transparent !important; }
+        body {
+            background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+        }
+        .menu {
+            background: #222;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #00ff00;
+        }
     </style>
 </head>
 <body>
-    <iframe src="https://quick-splash-stage.lovable.app/"></iframe>
+    <div class="menu">
+        <h3>Menu Invisível</h3>
+        <p>Se você está vendo isso, o app funcionou!</p>
+        <button onclick="alert('Botão clicado!')">Testar</button>
+    </div>
 </body>
 </html>
