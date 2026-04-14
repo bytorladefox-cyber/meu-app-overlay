@@ -12,16 +12,19 @@ jobs:
       - run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
-          echo '<!DOCTYPE html><html><head><style>body { background: transparent !important; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }</style></head><body><div style="background: rgba(0,255,0,0.8); padding: 20px; border-radius: 10px;">MENU ATIVO</div></body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><style>body { background: transparent !important; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }</style></head><body><div style="background: rgba(0,255,0,0.8); padding: 20px; border-radius: 10px; border: 2px solid white;">MENU ATIVO</div></body></html>' > www/index.html
           rm -rf android
           npx cap add android
           
-          # Injeta o Namespace e fixa o Kotlin
+          # 1. Garante que a pasta do código Java exista (Isso resolve o erro do seu print)
+          mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
+          
+          # 2. Configura o Namespace e o Kotlin
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
           echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
 
-          # FORÇA O JAVA A ACEITAR TRANSPARÊNCIA (O segredo do Overlay)
-          cat <<EOF > android/app/src/main/java/io/ionic/starter/MainActivity.java
+          # 3. Cria o arquivo Java no lugar certo (O "Cérebro" do App)
+          cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
           package com.getcapacitor.community.example;
           import android.os.Bundle;
           import android.graphics.Color;
@@ -38,7 +41,7 @@ jobs:
           }
           EOF
 
-          # FORÇA O MANIFESTO COMPLETO
+          # 4. Força o Manifesto com permissões de sobreposição
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
