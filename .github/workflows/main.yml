@@ -6,29 +6,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Java Setup
+      - name: Java
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-
-      - name: Config App
+      - name: Setup
         run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
           echo '<html></html>' > www/index.html
           echo '{ "appId": "com.getcapacitor.community.example", "appName": "Menu Overlay", "webDir": "www", "server": { "url": "https://snap-flow-click.lovable.app/", "cleartext": true } }' > capacitor.config.json
-          
-          # A LINHA ABAIXO É A QUE RESOLVE O SEU ERRO (LIMPA TUDO ANTES)
           rm -rf android
-          
           npx cap add android
           mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
-          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
-
-      - name: Native Transparency Fix
+      - name: JavaCode
         run: |
           cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
           package com.getcapacitor.community.example;
@@ -41,5 +34,7 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   this.bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
-                  this.bridge.getWebView().setLayerType(View.LAYER
-                  
+                  this.bridge.getWebView().setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                  getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
+              }
+              
