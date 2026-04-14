@@ -12,28 +12,39 @@ jobs:
       - run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
-          echo '<!DOCTYPE html><html><head><style>body { background: rgba(0,0,0,0.5); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; } .menu { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #00ff00; }</style></head><body><div class="menu"><h3>Menu Overlay Ativo</h3><p>Se você vê isso, o Android aceitou!</p></div></body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><style>body { background: transparent !important; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }</style></head><body><div style="background: rgba(0,255,0,0.8); padding: 20px; border-radius: 10px;">MENU ATIVO</div></body></html>' > www/index.html
           rm -rf android
           npx cap add android
           
-          # 1. Configura o Namespace
+          # Injeta o Namespace e fixa o Kotlin
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
-          
-          # 2. Remove conflitos de biblioteca
-          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'; exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7' }" >> android/app/build.gradle
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
 
-          # 3. FORÇA O MANIFESTO (O segredo para ativar a chave cinza)
-          rm -f android/app/src/main/AndroidManifest.xml
+          # FORÇA O JAVA A ACEITAR TRANSPARÊNCIA (O segredo do Overlay)
+          cat <<EOF > android/app/src/main/java/io/ionic/starter/MainActivity.java
+          package com.getcapacitor.community.example;
+          import android.os.Bundle;
+          import android.graphics.Color;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  try {
+                      this.bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
+                      getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
+                  } catch (Exception e) {}
+              }
+          }
+          EOF
+
+          # FORÇA O MANIFESTO COMPLETO
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-              <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION" />
-              <application android:allowBackup="true" android:label="Menu Invisivel">
-                  <activity android:name="com.getcapacitor.community.example.MainActivity" 
-                            android:exported="true" 
-                            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+              <application android:label="Menu Overlay">
+                  <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
