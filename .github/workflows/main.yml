@@ -1,4 +1,31 @@
-      - name: Native Fixes
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java Setup
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Config App
+        run: |
+          npm install @capacitor/cli @capacitor/android
+          mkdir -p www
+          echo '<html><body></body></html>' > www/index.html
+          echo '{ "appId": "com.getcapacitor.community.example", "appName": "Menu Overlay", "webDir": "www", "server": { "url": "https://quick-splash-stage.lovable.app/", "cleartext": true } }' > capacitor.config.json
+          rm -rf android
+          npx cap add android
+          mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
+          echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
+
+      - name: Native Transparency Fix
         run: |
           cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
           package com.getcapacitor.community.example;
@@ -14,8 +41,6 @@
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   WebView webView = this.bridge.getWebView();
-                  
-                  // Deixa a estrutura nativa transparente
                   webView.setBackgroundColor(Color.TRANSPARENT);
                   webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                   getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
@@ -23,11 +48,8 @@
                   webView.setWebViewClient(new WebViewClient() {
                       @Override
                       public void onPageFinished(WebView view, String url) {
-                          // Esse script embaixo é um 'veneno' contra fundo branco
-                          // Ele procura em todos os cantos do site e força transparência
                           String js = "var style = document.createElement('style');" +
-                                     "style.innerHTML = '* { background-color: transparent !important; } " +
-                                     ".bg-white, .bg-background, [data-background] { background-color: transparent !important; }';" +
+                                     "style.innerHTML = '* { background-color: transparent !important; background: transparent !important; }';" +
                                      "document.head.appendChild(style);" +
                                      "document.body.style.background = 'transparent';";
                           view.evaluateJavascript(js, null);
@@ -36,4 +58,34 @@
               }
           }
           EOF
+
+      - name: Create Manifest
+        run: |
+          cat <<EOF > android/app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+              <application android:label="Menu Overlay" android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+      - name: Compile
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-final
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           
