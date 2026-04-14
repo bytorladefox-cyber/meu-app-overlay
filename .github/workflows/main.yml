@@ -16,24 +16,47 @@ jobs:
         run: |
           npm install @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
-          cp index.html www/ 2>/dev/null || echo "<html><body>Menu Overlay</body></html>" > www/index.html
+          echo "<html><body>Overlay</body></html>" > www/index.html
           rm -rf android
           npx cap add android
           
-      - name: Auto-Fix All Gradle & Kotlin Errors
+      - name: Auto-Fix Gradle
         run: |
-          # Força a versão do Kotlin para evitar o primeiro erro que você teve
+          # Define o namespace e força a versão do Kotlin
+          echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
           echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22' } }" >> android/app/build.gradle
-          
-          # Resolve o erro de Namespace (Package) que deu por último
-          sed -i 's/apply plugin: "com.android.application"/apply plugin: "com.android.application"\nandroid { namespace "com.getcapacitor.community.example" }/g' android/app/build.gradle
 
-      - name: Create Transparent Overlay Manifest
+      - name: Create Transparent Manifest
         run: |
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+              <application android:allowBackup="true" android:label="Menu Invisivel">
+                  <activity android:name="com.getcapacitor.community.example.MainActivity" 
+                            android:exported="true" 
+                            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+      - name: Final Build
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-final
+          path: android/app/build/outputs/apk/debug/app-debug.apk
               <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
               <application android:allowBackup="true" android:label="Menu Invisivel">
                   <activity android:name="com.getcapacitor.community.example.MainActivity" 
