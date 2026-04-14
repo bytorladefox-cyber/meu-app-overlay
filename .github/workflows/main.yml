@@ -12,7 +12,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install and Setup Capacitor
+      - name: Install Capacitor
         run: |
           npm install @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
@@ -20,13 +20,12 @@ jobs:
           rm -rf android
           npx cap add android
           
-      - name: Auto-Fix Gradle
+      - name: Fix Android Config
         run: |
-          # Define o namespace e força a versão do Kotlin
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
-          echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'; force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22' } }" >> android/app/build.gradle
+          echo "configurations.all { resolutionStrategy { force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22' } }" >> android/app/build.gradle
 
-      - name: Create Transparent Manifest
+      - name: Create Manifest
         run: |
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -46,58 +45,11 @@ jobs:
           </manifest>
           EOF
 
-      - name: Final Build
+      - name: Build
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-final
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-              <application android:allowBackup="true" android:label="Menu Invisivel">
-                  <activity android:name="com.getcapacitor.community.example.MainActivity" 
-                            android:exported="true" 
-                            android:theme="@android:style/Theme.Translucent.NoTitleBar">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-
-      - name: Final Build
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK Ready
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-final
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-
-      - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload
+      
