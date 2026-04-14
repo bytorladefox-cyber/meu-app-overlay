@@ -4,7 +4,7 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://quick-splash-stage.lovable.app/",
+    "url": "https://quick-splash-stage.lovable.app//",
     "cleartext": true
   }
 }
