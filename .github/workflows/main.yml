@@ -4,10 +4,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -21,7 +19,7 @@ jobs:
           npx cap add android
           mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
-      - name: JavaCode
+      - name: Java
         run: |
           cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
           package com.getcapacitor.community.example;
@@ -37,4 +35,33 @@ jobs:
                   this.bridge.getWebView().setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                   getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
               }
-              
+          }
+          EOF
+      - name: Manifest
+        run: |
+          cat <<EOF > android/app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+              <application android:label="Menu Overlay" android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+      - name: Build
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-final
+          path: "**/*.apk"
+          
