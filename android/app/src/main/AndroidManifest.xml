@@ -8,13 +8,14 @@
     <application
         android:allowBackup="true"
         android:label="Menu Invisivel"
+        android:hardwareAccelerated="true"
         android:supportsRtl="true">
         
         <activity
             android:name="com.meu.overlay.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
-            android:launchMode="singleIntance"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleInstance"
             android:exported="true">
             
             <intent-filter>
