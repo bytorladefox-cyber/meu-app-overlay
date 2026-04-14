@@ -1,7 +1,7 @@
 name: Build
 on: [push]
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,56 +12,5 @@ jobs:
       - run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
-          # Criando o conteúdo real do seu menu
-          echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body { background: rgba(0,0,0,0.5); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; } .menu { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #00ff00; text-align: center; }</style></head><body><div class="menu"><h3>Menu Overlay Ativo</h3><p>Funciona!</p><button style="padding:10px">BOTÃO TESTE</button></div></body></html>' > www/index.html
-          
-          # LIMPA A CONFIGURAÇÃO QUE ESTÁ CHAMANDO O SITE EXTERNO
-          echo '{ "appId": "com.getcapacitor.community.example", "appName": "Menu Overlay", "webDir": "www", "server": { "androidScheme": "https" } }' > capacitor.config.json
-
-          rm -rf android
-          npx cap add android
-          
-          mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
-          echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
-          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
-
-          # Injeta o código de transparência
-          cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
-          package com.getcapacitor.community.example;
-          import android.os.Bundle;
-          import android.graphics.Color;
-          import com.getcapacitor.BridgeActivity;
-          public class MainActivity extends BridgeActivity {
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  try {
-                      this.bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
-                      getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
-                  } catch (Exception e) {}
-              }
-          }
-          EOF
-
-          # Manifesto com permissões
-          cat <<EOF > android/app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-              <application android:label="Menu Overlay">
-                  <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-          
-          cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          echo '<html><body></body></html>' > www/index.html
           
