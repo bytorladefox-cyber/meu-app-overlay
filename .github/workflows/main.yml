@@ -12,18 +12,20 @@ jobs:
       - run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
-          echo '<!DOCTYPE html><html><head><style>body { background: transparent !important; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }</style></head><body><div style="background: rgba(0,255,0,0.8); padding: 20px; border-radius: 10px; border: 2px solid white;">MENU ATIVO</div></body></html>' > www/index.html
+          # Criando o conteúdo real do seu menu
+          echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body { background: rgba(0,0,0,0.5); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; } .menu { background: #222; padding: 20px; border-radius: 15px; border: 2px solid #00ff00; text-align: center; }</style></head><body><div class="menu"><h3>Menu Overlay Ativo</h3><p>Funciona!</p><button style="padding:10px">BOTÃO TESTE</button></div></body></html>' > www/index.html
+          
+          # LIMPA A CONFIGURAÇÃO QUE ESTÁ CHAMANDO O SITE EXTERNO
+          echo '{ "appId": "com.getcapacitor.community.example", "appName": "Menu Overlay", "webDir": "www", "server": { "androidScheme": "https" } }' > capacitor.config.json
+
           rm -rf android
           npx cap add android
           
-          # 1. Garante que a pasta do código Java exista (Isso resolve o erro do seu print)
           mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
-          
-          # 2. Configura o Namespace e o Kotlin
           echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
           echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
 
-          # 3. Cria o arquivo Java no lugar certo (O "Cérebro" do App)
+          # Injeta o código de transparência
           cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
           package com.getcapacitor.community.example;
           import android.os.Bundle;
@@ -41,7 +43,7 @@ jobs:
           }
           EOF
 
-          # 4. Força o Manifesto com permissões de sobreposição
+          # Manifesto com permissões
           cat <<EOF > android/app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
