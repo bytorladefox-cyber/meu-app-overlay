@@ -9,20 +9,29 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Install
+      - name: Install and Setup
         run: |
           npm install @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
           touch www/index.html
-          # O comando abaixo apenas atualiza se a pasta já existir
-          npx cap sync android
-      - name: Build
+          # Remove a pasta android atual para criar uma completa
+          rm -rf android
+          npx cap add android
+          # Coloca o SEU arquivo de transparência no lugar certo do novo projeto
+          mkdir -p android/app/src/main/
+          # Se você tiver o arquivo AndroidManifest.xml na raiz ou em outro lugar, vamos garantir que ele exista
+          # Caso contrário, o comando abaixo cria um básico com transparência agora mesmo
+          echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.meu.overlay"><uses-permission android:name="android.permission.INTERNET" /><uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /><application android:allowBackup="true" android:label="Menu Invisivel"><activity android:name="com.meu.overlay.MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity></application></manifest>' > android/app/src/main/AndroidManifest.xml
+
+      - name: Build APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          
