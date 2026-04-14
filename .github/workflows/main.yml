@@ -9,26 +9,46 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Setup
+      - name: Run
         run: |
           npm install @capacitor/cli @capacitor/android
-          mkdir -p www
-          echo '<html></html>' > www/index.html
-          echo '{ "appId": "com.getcapacitor.community.example", "appName": "Menu Overlay", "webDir": "www", "server": { "url": "https://snap-flow-click.lovable.app/", "cleartext": true } }' > capacitor.config.json
-          rm -rf android
-          npx cap add android
-          
-          # Ajuste de Namespace e Versão do Java no Gradle
-          echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
-          sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' android/app/build.gradle
-          
-          mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
-      - name: Java
-        run: |
-          cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
-          package com.getcapacitor.community.example;
+          mkdir -p www && echo '<html></html>' > www/index.html
+          echo '{"appId":"com.app.overlay","appName":"Overlay","webDir":"www","server":{"url":"https://snap-flow-click.lovable.app/","cleartext":true}}' > capacitor.config.json
+          rm -rf android && npx cap add android
+          echo "android { namespace 'com.app.overlay' }" >> android/app/build.gradle
+          mkdir -p android/app/src/main/java/com/app/overlay/
+          cat <<EOF > android/app/src/main/java/com/app/overlay/MainActivity.java
+          package com.app.overlay;
           import android.os.Bundle;
           import android.graphics.Color;
-          import android.view.View;
-          import com.
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              this.bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
+              getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
+            }
+          }
+          EOF
+          cat <<EOF > android/app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+            <application android:label="Overlay" android:usesCleartextTraffic="true">
+              <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" />
+                </intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          EOF
+          cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Out
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-final
+          path: "**/*.apk"
           
