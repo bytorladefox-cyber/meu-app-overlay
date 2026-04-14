@@ -4,13 +4,70 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java Setup
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-      - run: |
+
+      - name: Create App
+        run: |
           npm install @capacitor/cli @capacitor/android
           mkdir -p www
           echo '<html><body></body></html>' > www/index.html
+          echo '{ "appId": "com.getcapacitor.community.example", "appName": "Menu Overlay", "webDir": "www", "server": { "url": "https://quick-splash-stage.lovable.app/", "cleartext": true } }' > capacitor.config.json
+          rm -rf android
+          npx cap add android
+          mkdir -p android/app/src/main/java/com/getcapacitor/community/example/
+          echo "android { namespace 'com.getcapacitor.community.example' }" >> android/app/build.gradle
+          echo "configurations.all { exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8' }" >> android/app/build.gradle
+
+      - name: Native Fixes
+        run: |
+          cat <<EOF > android/app/src/main/java/com/getcapacitor/community/example/MainActivity.java
+          package com.getcapacitor.community.example;
+          import android.os.Bundle;
+          import android.graphics.Color;
+          import android.view.View;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  this.bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
+                  this.bridge.getWebView().setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                  getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
+              }
+          }
+          EOF
+          cat <<EOF > android/app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+              <application android:label="Menu Overlay" android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+      - name: Compile APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-final
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           
