@@ -1,54 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Menu Overlay</title>
     <style>
-        /* Força transparência total na janela do App */
-        html, body {
-            background: transparent !important;
-            background-color: rgba(0,0,0,0) !important;
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* O Iframe puxa seu menu da Lovable */
+        html, body { background: transparent !important; margin: 0; padding: 0; overflow: hidden; }
         iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+            width: 100vw; height: 100vh; border: none;
+            /* O segredo: Filtro de inversão e brilho para tentar 'vazar' o fundo */
             background: transparent !important;
         }
     </style>
 </head>
 <body>
-
-    <iframe 
-        src="https://snap-flow-click.lovable.app/" 
-        id="lovableMenu"
-        allowtransparency="true">
-    </iframe>
+    <iframe src="https://snap-flow-click.lovable.app/" id="appFrame"></iframe>
 
     <script>
-        // Tenta remover fundos residuais assim que carregar
-        const frame = document.getElementById('lovableMenu');
-        frame.onload = function() {
+        const frame = document.getElementById('appFrame');
+        
+        // Função para tentar limpar o branco do site externo
+        setInterval(() => {
             try {
-                // Tenta injetar transparência no conteúdo
-                frame.contentWindow.document.body.style.background = 'transparent';
-                frame.contentWindow.document.documentElement.style.background = 'transparent';
-            } catch(e) {
-                // Se o navegador bloquear por segurança, o fundo do App (que já é transparente) ajudará
-                console.log("App carregado. Verifique as permissões de sobreposição se o fundo persistir.");
+                const doc = frame.contentWindow.document;
+                const style = doc.createElement('style');
+                style.innerHTML = `
+                    html, body, #root, main, .min-h-screen { 
+                        background: transparent !important; 
+                        background-color: transparent !important; 
+                    }
+                    * { border-color: transparent !important; }
+                `;
+                doc.head.appendChild(style);
+            } catch (e) {
+                // Se o navegador bloquear, usamos o plano B: Injetar via Capacitor
+                if (window.Capacitor) {
+                    window.Capacitor.nativePromise('WebView', 'setBackgroundColor', { color: '#00000000' });
+                }
             }
-        };
+        }, 1000);
     </script>
 </body>
 </html>
