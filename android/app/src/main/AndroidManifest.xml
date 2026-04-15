@@ -8,14 +8,18 @@
     <application
         android:allowBackup="true"
         android:label="Menu Invisivel"
-        android:hardwareAccelerated="true"
+        /* MUDANÇA AQUI: Desativamos a aceleração global para permitir o 'furo' da transparência */
+        android:hardwareAccelerated="false"
         android:supportsRtl="true">
         
         <activity
             android:name="com.meu.overlay.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            /* Garante que o tema que você criou seja aplicado */
             android:theme="@style/AppTheme"
             android:launchMode="singleInstance"
+            /* Ajuda a manter a transparência em overlays */
+            android:showForAllUsers="true"
             android:exported="true">
             
             <intent-filter>
