@@ -14,7 +14,7 @@
         <activity
             android:name="com.meu.overlay.MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:theme="@style/AppTheme"
             android:launchMode="singleInstance"
             android:exported="true">
             
