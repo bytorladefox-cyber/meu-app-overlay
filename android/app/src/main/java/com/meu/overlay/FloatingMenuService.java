@@ -27,30 +27,42 @@ public class FloatingMenuService extends Service {
         webView = new WebView(this);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
         
-        webView.setWebViewClient(new WebViewClient());
+        // O SEGREDO: Vamos esperar o site carregar e injetar um comando para deixar tudo transparente
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // Esse código entra no site da Lovable e desliga o fundo branco
+                view.loadUrl("javascript:(function() { " +
+                        "document.body.style.setProperty('background', 'transparent', 'important');" +
+                        "document.body.style.setProperty('background-color', 'transparent', 'important');" +
+                        "document.documentElement.style.setProperty('background', 'transparent', 'important');" +
+                        "var all = document.getElementsByTagName('*');" +
+                        "for (var i=0, max=all.length; i < max; i++) {" +
+                        "  if (all[i].style.backgroundColor == 'white' || all[i].style.backgroundColor == 'rgb(255, 255, 255)') {" +
+                        "    all[i].style.backgroundColor = 'transparent';" +
+                        "  }" +
+                        "}" +
+                        "})()");
+            }
+        });
 
-        // --- MUDANÇA PARA TESTE ---
-        // Se o Google carregar flutuando, seu app está funcionando!
-        webView.loadUrl("https://www.google.com");
-        // --------------------------
+        webView.loadUrl("https://snap-flow-click.lovable.app/");
 
+        // Configurações do Android para não ter fundo
         webView.setBackgroundColor(Color.TRANSPARENT); 
         webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-        // Definindo um tamanho fixo (800x800) para você ver a transparência em volta
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                800, 
-                800,
-                (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) ?
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
-                        WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT
         );
 
-        params.gravity = Gravity.CENTER; // Centraliza na tela
-
+        params.gravity = Gravity.TOP;
         windowManager.addView(webView, params);
     }
 
