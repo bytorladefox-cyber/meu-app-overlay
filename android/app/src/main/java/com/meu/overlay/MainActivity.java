@@ -5,41 +5,44 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.widget.Toast;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Verifica se tem permissão para sobreposição
+        // Se o Android for 6.0 ou superior, precisamos da permissão especial
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            // Abre a tela de configuração do Android
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
-            startActivityForResult(intent, 123);
+            startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
+            Toast.makeText(this, "Autorize o app a 'Aparecer sobre outros'", Toast.LENGTH_LONG).show();
         } else {
-            iniciarServico();
+            // Se já tem permissão, liga o menu flutuante
+            startFloatingMenuService();
         }
     }
 
-    private void iniciarServico() {
-        Intent intent = new Intent(this, FloatingMenuService.class);
-        startService(intent);
-        finish(); // Fecha a tela branca e deixa só a bolha
-    }
-}
-// Essencial: Desativa aceleração de hardware apenas na WebView 
-            // para evitar que o motor gráfico preencha o fundo com preto/branco
-            webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        }
+    private void startFloatingMenuService() {
+        startService(new Intent(MainActivity.this, FloatingMenuService.class));
+        finish(); // FECHA A TELA BRANCA IMEDIATAMENTE
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        // Reforço de segurança: Garante transparência ao voltar para o app
-        if (this.bridge != null) {
-            this.bridge.getWebView().setBackgroundColor(0);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CODE_DRAW_OVER_OTHER_APP_PERMISSION) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+                startFloatingMenuService();
+            } else {
+                Toast.makeText(this, "Permissão negada. O menu não vai aparecer.", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 }
