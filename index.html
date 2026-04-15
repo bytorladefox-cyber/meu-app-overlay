@@ -1,29 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menu Overlay</title>
     <style>
+        /* Força transparência total na janela do App */
         html, body {
             background: transparent !important;
             background-color: rgba(0,0,0,0) !important;
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        /* Vamos deixar o container do menu pequeno */
-        .floating-container {
-            width: 80px; /* Tamanho do seu botão apenas */
-            height: 80px;
-            background: transparent;
-        }
+
+        /* O Iframe puxa seu menu da Lovable */
         iframe {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             border: none;
             background: transparent !important;
         }
     </style>
 </head>
 <body>
-    <div class="floating-container">
-        <iframe src="SEU_LINK_DA_LOVABLE_AQUI"></iframe>
-    </div>
+
+    <iframe 
+        src="https://snap-flow-click.lovable.app/" 
+        id="lovableMenu"
+        allowtransparency="true">
+    </iframe>
+
+    <script>
+        // Tenta remover fundos residuais assim que carregar
+        const frame = document.getElementById('lovableMenu');
+        frame.onload = function() {
+            try {
+                // Tenta injetar transparência no conteúdo
+                frame.contentWindow.document.body.style.background = 'transparent';
+                frame.contentWindow.document.documentElement.style.background = 'transparent';
+            } catch(e) {
+                // Se o navegador bloquear por segurança, o fundo do App (que já é transparente) ajudará
+                console.log("App carregado. Verifique as permissões de sobreposição se o fundo persistir.");
+            }
+        };
+    </script>
 </body>
 </html>
