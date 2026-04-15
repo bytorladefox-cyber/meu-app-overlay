@@ -1,41 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlay App</title>
     <style>
-        html, body { background: transparent !important; margin: 0; padding: 0; overflow: hidden; }
-        iframe {
-            width: 100vw; height: 100vh; border: none;
-            /* O segredo: Filtro de inversão e brilho para tentar 'vazar' o fundo */
-            background: transparent !important;
+        /* Zera tudo para garantir que não haja margens ou cores padrão */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    </style>
-</head>
-<body>
-    <iframe src="https://snap-flow-click.lovable.app/" id="appFrame"></iframe>
 
-    <script>
-        const frame = document.getElementById('appFrame');
+        /* Força a transparência no nível mais alto do documento */
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0) !important;
+            background: transparent !important;
+            overflow: hidden;
+        }
+
+        /* Configura o iframe para ocupar tudo e ser invisível visualmente */
         
-        // Função para tentar limpar o branco do site externo
-        setInterval(() => {
-            try {
-                const doc = frame.contentWindow.document;
-                const style = doc.createElement('style');
-                style.innerHTML = `
-                    html, body, #root, main, .min-h-screen { 
-                        background: transparent !important; 
-                        background-color: transparent !important; 
-                    }
-                    * { border-color: transparent !important; }
-                `;
-                doc.head.appendChild(style);
-            } catch (e) {
-                // Se o navegador bloquear, usamos o plano B: Injetar via Capacitor
-                if (window.Capacitor) {
-                    window.Capacitor.nativePromise('WebView', 'setBackgroundColor', { color: '#00000000' });
-                }
-            }
-        }, 1000);
-    </script>
-</body>
-</html>
