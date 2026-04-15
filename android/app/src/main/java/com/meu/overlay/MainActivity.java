@@ -4,34 +4,48 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // 1. Força o uso do seu estilo transparente ANTES de criar a tela
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
 
-        // 1. O SEGREDO: Isso avisa o Android que a janela pode ter transparência
-        getWindow().setFormat(PixelFormat.TRANSLUCENT);
+        // 2. Configurações de Janela de baixo nível para permitir transparência
+        Window window = getWindow();
         
-        // 2. Remove qualquer fundo padrão da janela nativa
-        getWindow().getDecorView().setBackgroundColor(Color.TRANSPARENT);
+        // Remove qualquer flag que possa forçar opacidade
+        window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         
-        // 3. Deixa a WebView transparente assim que ela for criada
+        // Define o formato do pixel para Transparente (fura a camada do sistema)
+        window.setFormat(PixelFormat.TRANSLUCENT);
+        
+        // Força o fundo da janela a ser nulo/transparente
+        window.setBackgroundDrawableResource(android.R.color.transparent);
+        window.getDecorView().setBackgroundColor(Color.TRANSPARENT);
+
+        // 3. Configuração do WebView do Capacitor
         if (this.bridge != null) {
             WebView webView = this.bridge.getWebView();
-            webView.setBackgroundColor(0x00000000);
+            // Cor 0 é o transparente absoluto (Alpha 0)
+            webView.setBackgroundColor(0); 
+            // Essencial: Desativa aceleração de hardware apenas na WebView 
+            // para evitar que o motor gráfico preencha o fundo com preto/branco
             webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        // Reforça a transparência no início para garantir
-        WebView webView = this.bridge.getWebView();
-        webView.setBackgroundColor(0);
-        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+    protected void onResume() {
+        super.onResume();
+        // Reforço de segurança: Garante transparência ao voltar para o app
+        if (this.bridge != null) {
+            this.bridge.getWebView().setBackgroundColor(0);
+        }
     }
 }
